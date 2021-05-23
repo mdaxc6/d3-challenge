@@ -70,17 +70,23 @@ function renderAxes(newScale, axis, orientation) {
 }
 
 // function used for updating circles group witha transition
-function renderCircles(circlesGroup, newScale, chosenAxis, orientation){
+function renderCircles(circlesGroup, textGroup, newScale, chosenAxis, orientation){
     if (orientation === 'v') {
         circlesGroup.transition()
-        .duration(1000)
-        .attr("cy", d => newScale(d[chosenAxis]));
+            .duration(1000)
+            .attr("cy", d => newScale(d[chosenAxis]));
+        textGroup.transition()
+            .duration(1000)
+            .attr("dy", d => newScale(d[chosenAxis]));
     }else {
         circlesGroup.transition()
-        .duration(1000)
-        .attr("cx", d => newScale(d[chosenAxis]));
+            .duration(1000)
+            .attr("cx", d => newScale(d[chosenAxis]));
+        textGroup.transition()
+            .duration(1000)
+            .attr("dx", d => newScale(d[chosenAxis]));
     }
-
+    return circlesGroup;
 }
 
 function updateToolTip(chosenAxis, circlesGroup) {
@@ -122,27 +128,27 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
         .classed("y-axis", true)
         .call(leftAxis);
     
+    
     // ------ CIRCLES --------
     // Append initital circles w/ text
     // Create main group for circles and a group cor each circle
-    var circlesGroup = chartGroup.selectAll("circle")
+    var circlesGroup = chartGroup.append("g")
+        .classed("circle-group", true);
+    
+    var circles = circlesGroup.selectAll("circle")
         .data(acsData)
         .enter()
-        // .append("g")
-        // .classed("circles-group", true);
-        
-
-    // Populate chart with circles
-    var circles = circlesGroup
         .append("circle")
         .attr("cx", d => xLinearScale(d[chosenXAxis]))
         .attr("cy", d => yLinearScale(d[chosenYAxis]))
         .attr("r", 15)
         .attr("fill", "green")
         .attr("opacity", ".5");
-
+        
     // Add abbreviation labels
-    var circleText = circlesGroup
+    var circleText = circlesGroup.selectAll("text")
+        .data(acsData)
+        .enter()
         .append("text")
         .attr("dx", d => xLinearScale(d[chosenXAxis]))
         .attr("dy", d => yLinearScale(d[chosenYAxis]))
@@ -217,7 +223,21 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
 
                 xAxis = renderAxes(xLinearScale, xAxis, "h");
 
-                circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis, "h");
+                circlesGroup = renderCircles(circles, circleText, xLinearScale, chosenXAxis, "h");
+            }
+        })
+
+    yLabelsGroup.selectAll("text")
+        .on("click", function() {
+            var value = d3.select(this).attr("value");
+            if (value !== chosenYAxis) {
+                chosenYAxis = value;
+
+                yLinearScale = yScale(acsData, chosenYAxis);
+
+                yAxis = renderAxes(yLinearScale, yAxis, "v");
+
+                circlesGroup = renderCircles(circles, circleText, yLinearScale, chosenYAxis, "v");
             }
         })
 })
