@@ -69,6 +69,25 @@ function renderAxes(newScale, axis, orientation) {
     return axis;
 }
 
+// function used for updating circles group witha transition
+function renderCircles(circlesGroup, newScale, chosenAxis, orientation){
+    if (orientation === 'v') {
+        circlesGroup.transition()
+        .duration(1000)
+        .attr("cy", d => newScale(d[chosenAxis]));
+    }else {
+        circlesGroup.transition()
+        .duration(1000)
+        .attr("cx", d => newScale(d[chosenAxis]));
+    }
+
+}
+
+function updateToolTip(chosenAxis, circlesGroup) {
+    var label;
+    //TODO
+}
+
 d3.csv('assets/data/data.csv').then(function(acsData, err) {
     if (err) throw err;
 
@@ -109,10 +128,12 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
     var circlesGroup = chartGroup.selectAll("circle")
         .data(acsData)
         .enter()
-        .append("g");
+        // .append("g")
+        // .classed("circles-group", true);
+        
 
     // Populate chart with circles
-    var circle = circlesGroup
+    var circles = circlesGroup
         .append("circle")
         .attr("cx", d => xLinearScale(d[chosenXAxis]))
         .attr("cy", d => yLinearScale(d[chosenYAxis]))
@@ -185,4 +206,18 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
         .attr("value", "obesity")
         .classed("inactive", true)
         .text("Obese (%)");
+
+    xLabelsGroup.selectAll("text")
+        .on("click", function() {
+            var value = d3.select(this).attr("value");
+            if (value !== chosenXAxis) {
+                chosenXAxis = value;
+
+                xLinearScale = xScale(acsData, chosenXAxis);
+
+                xAxis = renderAxes(xLinearScale, xAxis, "h");
+
+                circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis, "h");
+            }
+        })
 })
