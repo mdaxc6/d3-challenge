@@ -6,8 +6,8 @@ const svgHeight = 500;
 const margin = {
     top: 60,
     right: 60,
-    bottom: 60,
-    left: 60
+    bottom: 100,
+    left: 100
 };
 
 const chartWidth = svgWidth - margin.left - margin.right;
@@ -54,6 +54,20 @@ function yScale(acsData, chosenYAxis) {
     return yLinearScale;
 }
 
+// function used for updating axes upon click
+function renderAxes(newScale, axis, orientation) {
+    if (orientation === 'v') {
+        var newAxis = d3.axisLeft(newScale);
+    }else {
+        var newAxis = d3.axisBottom(newScale);
+    }
+
+    axis.transition()
+        .duration(1000)
+        .call(newAxis);
+
+    return axis;
+}
 
 d3.csv('assets/data/data.csv').then(function(acsData, err) {
     if (err) throw err;
@@ -86,6 +100,7 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
 
     // Append y axis
     var yAxis = chartGroup.append("g")
+        .classed("y-axis", true)
         .call(leftAxis);
     
     // ------ CIRCLES --------
@@ -108,15 +123,66 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
     // Add abbreviation labels
     var circleText = circlesGroup
         .append("text")
+        .attr("dx", d => xLinearScale(d[chosenXAxis]))
+        .attr("dy", d => yLinearScale(d[chosenYAxis]))
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "central")
         .text( d => d.abbr);
 
-    // get bounding box of text for centering
-    var bb = circleText.node()
-        .getBBox();
+    // ------- AXIS LABELS ---------
+    // X-LABELS
+    // Create group for three x-axis labels
+    var xLabelsGroup = chartGroup.append("g")
+        .attr("transform", `translate(${chartWidth / 2}, ${chartHeight + 20})`);
+    
+    var povertyLabel = xLabelsGroup.append("text")
+        .attr("x", 0)
+        .attr("y", 20)
+        .attr("value", "poverty")
+        .classed("active", true)
+        .text("In Poverty (%)");
+    
+    var ageLabel = xLabelsGroup.append("text")
+        .attr("x", 0)
+        .attr("y", 40)
+        .attr("value", "age")
+        .classed("inactive", true)
+        .text("Age (Median)");
 
-    // center text to each circle
-    circleText
-        .attr("dx", d => xLinearScale(d[chosenXAxis]) - (bb.width / 2))
-        .attr("dy", d => yLinearScale(d[chosenYAxis]) + (bb.height / 4))
+    var incomeLabel = xLabelsGroup.append("text")
+        .attr("x", 0)
+        .attr("y", 60)
+        .attr("value", "income")
+        .classed("inactive", true)
+        .text("Household Income (Median)");
+    
+    // Y-LABELS
+    // Create group for three y-axis labels
+    var yLabelsGroup = chartGroup.append("g")
+        .attr("transform", "rotate(-90)")
+        .attr("transform", `translate(0, ${chartHeight / 2})`); 
+    
+    var healthLabel = yLabelsGroup.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0)
+        .attr("y", -30)
+        .attr("value", "healthcare")
+        .classed("active", true)
+        .text("Lacks Healthcare (%)");
 
+    var smokesLabel = yLabelsGroup.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0)
+        .attr("y", -50)
+        .attr("value", "smokes")
+        .classed("inactive", true)
+        .text("Smokes (%)");
+
+    var obesityLabel = yLabelsGroup.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0)
+        .attr("y", -70)
+        .attr("value", "obesity")
+        .classed("inactive", true)
+        .text("Obese (%)");
 })
