@@ -1,5 +1,3 @@
-// @TODO: YOUR CODE HERE!
-
 const svgWidth = 960;
 const svgHeight = 500;
 
@@ -89,9 +87,33 @@ function renderCircles(circlesGroup, textGroup, newScale, chosenAxis, orientatio
     return circlesGroup;
 }
 
-function updateToolTip(chosenAxis, circlesGroup) {
-    var label;
-    //TODO
+
+
+function updateToolTip(circlesGroup, circleLabels, xLabelsGroup, yLabelsGroup) {
+    
+    xValue = xLabelsGroup.select(".active").attr("value");
+    yValue = yLabelsGroup.select(".active").attr("value");
+
+
+    var toolTip = d3.tip()
+        .attr("class", "d3-tip")
+        .offset([80, -60])
+        .html( d => 
+            `<strong>${d.state}</strong>
+            <hr>
+            <strong>${xValue}</strong>: ${d[xValue]}<br>
+            <strong>${yValue}</strong>: ${d[yValue]}
+            `);
+    
+    circlesGroup.call(toolTip);
+
+    circlesGroup.on("mouseover", function(d) { toolTip.show(d, this)});
+    circlesGroup.on("mouseout", function(d) { toolTip.hide(d, this)});
+
+    circleLabels.on("mouseover", function(d) { toolTip.show(d, this)});
+    circleLabels.on("mouseout", function(d) { toolTip.hide(d, this)});
+
+    return circlesGroup;
 }
 
 d3.csv('assets/data/data.csv').then(function(acsData, err) {
@@ -213,17 +235,31 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
         .classed("inactive", true)
         .text("Obese (%)");
 
+    circlesGroup = updateToolTip(circles, circleText, xLabelsGroup, yLabelsGroup);
+    
     xLabelsGroup.selectAll("text")
         .on("click", function() {
             var value = d3.select(this).attr("value");
             if (value !== chosenXAxis) {
                 chosenXAxis = value;
 
+                // set all X labels inactive
+                povertyLabel.attr("class", "inactive");
+                ageLabel.attr("class", "inactive");
+                incomeLabel.attr("class", "inactive");
+                // set selected label as active
+                d3.select(this).attr("class", "active");
+
+                // set new X scale
                 xLinearScale = xScale(acsData, chosenXAxis);
 
+                // render new axis
                 xAxis = renderAxes(xLinearScale, xAxis, "h");
 
+                // render new circles
                 circlesGroup = renderCircles(circles, circleText, xLinearScale, chosenXAxis, "h");
+
+                circlesGroup = updateToolTip(circles, circleText, xLabelsGroup, yLabelsGroup);
             }
         })
 
@@ -233,11 +269,23 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
             if (value !== chosenYAxis) {
                 chosenYAxis = value;
 
+                // set all Y labels inactive
+                healthLabel.attr("class", "inactive");
+                smokesLabel.attr("class", "inactive");
+                obesityLabel.attr("class", "inactive");
+                // set selected y label as active
+                d3.select(this).attr("class", "active");
+
+                // set new Y scale
                 yLinearScale = yScale(acsData, chosenYAxis);
 
+                // render new axis
                 yAxis = renderAxes(yLinearScale, yAxis, "v");
 
+                // render new circles
                 circlesGroup = renderCircles(circles, circleText, yLinearScale, chosenYAxis, "v");
+                
+                circlesGroup = updateToolTip(circles, circleText, xLabelsGroup, yLabelsGroup);
             }
         })
-})
+}).catch( err => console.log(err));
