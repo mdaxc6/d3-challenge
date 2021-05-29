@@ -107,8 +107,14 @@ function updateToolTip(circlesGroup, circleLabels, xLabelsGroup, yLabelsGroup) {
     
     circlesGroup.call(toolTip);
 
-    circlesGroup.on("mouseover", function(d) { toolTip.show(d, this)});
-    circlesGroup.on("mouseout", function(d) { toolTip.hide(d, this)});
+    circlesGroup.on("mouseover", function(d) { 
+        toolTip.show(d, this)
+        d3.select(this).attr("fill", "#e3cdc1")
+    });
+    circlesGroup.on("mouseout", function(d) { 
+        toolTip.hide(d, this)
+        d3.select(this).attr("fill", "#a0937d")
+    });
 
     circleLabels.on("mouseover", function(d) { toolTip.show(d, this)});
     circleLabels.on("mouseout", function(d) { toolTip.hide(d, this)});
@@ -156,18 +162,10 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
     // Create main group for circles and a group cor each circle
     var circlesGroup = chartGroup.append("g")
         .classed("circle-group", true);
-    
-    var circles = circlesGroup.selectAll("circle")
-        .data(acsData)
-        .enter()
-        .append("circle")
-        .attr("cx", d => xLinearScale(d[chosenXAxis]))
-        .attr("cy", d => yLinearScale(d[chosenYAxis]))
-        .attr("r", 15)
-        .attr("fill", "green")
-        .attr("opacity", ".5");
-        
-    // Add abbreviation labels
+
+
+    // Add abbreviation labels first so theyre behind the circle layer
+    // this allows for highlighting the slected circle
     var circleText = circlesGroup.selectAll("text")
         .data(acsData)
         .enter()
@@ -177,6 +175,18 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "central")
         .text( d => d.abbr);
+
+    var circles = circlesGroup.selectAll("circle")
+        .data(acsData)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xLinearScale(d[chosenXAxis]))
+        .attr("cy", d => yLinearScale(d[chosenYAxis]))
+        .attr("r", 15)
+        .attr("fill", "#a0937d")
+        .attr("opacity", ".5");
+        
+
 
     // ------- AXIS LABELS ---------
     // X-LABELS
@@ -288,4 +298,7 @@ d3.csv('assets/data/data.csv').then(function(acsData, err) {
                 circlesGroup = updateToolTip(circles, circleText, xLabelsGroup, yLabelsGroup);
             }
         })
+
+
+
 }).catch( err => console.log(err));
