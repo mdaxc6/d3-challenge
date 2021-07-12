@@ -1,6 +1,8 @@
 # Custom Visualization with D3
 An custom, interactive visual based on 2014 ACS 1-year estimates from the US Census Bureau.
-Created using the D3 JavaScript library. [d3 documentation](https://d3js.org/)
+Created using the D3 JavaScript library. 
+
+[D3 documentation](https://d3js.org/)
 
 
 
